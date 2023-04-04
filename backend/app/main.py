@@ -18,7 +18,7 @@ if not api_key:
     print("OPENAI_API_KEY not found in .env file")
     sys.exit(1)
 
-loader = UnstructuredFileLoader('app/docs/document.txt')
+loader = UnstructuredFileLoader('./docs/document.txt')
 documents = loader.load()
 
 persist_directory = 'db'
