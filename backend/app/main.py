@@ -24,6 +24,11 @@ documents = loader.load()
 persist_directory = 'db'
 
 
+@app.get("/")
+async def read_root(request: Request):
+    return 'welcome to the llm-chat-gpt-demo'
+
+
 @app.post("/")
 async def read_root(request: Request):
     body = await request.json()
