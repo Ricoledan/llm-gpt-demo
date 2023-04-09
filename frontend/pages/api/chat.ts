@@ -1,5 +1,6 @@
 import { Message } from "@/types";
 import { OpenAIStream } from "@/utils";
+import { LocalAIStream } from "@/utils/local"
 
 export const config = {
   runtime: "edge"
@@ -24,7 +25,10 @@ const handler = async (req: Request): Promise<Response> => {
       messagesToSend.push(message);
     }
 
-    const stream = await OpenAIStream(messagesToSend);
+    console.log('user input: ', messagesToSend[messagesToSend.length - 1].content)
+
+    // const stream = await OpenAIStream(messagesToSend);
+    const stream = await LocalAIStream(messagesToSend);
 
     return new Response(stream);
   } catch (error) {

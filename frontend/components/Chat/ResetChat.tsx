@@ -16,4 +16,3 @@ export const ResetChat: FC<Props> = ({ onReset }) => {
     </div>
   );
 };
-;

@@ -1,7 +1,10 @@
 import os
 import sys
+import uuid
+import time
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from langchain.document_loaders.unstructured import UnstructuredFileLoader
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.embeddings import OpenAIEmbeddings
@@ -20,29 +23,39 @@ if not api_key:
 
 loader = UnstructuredFileLoader('./docs/document.txt')
 documents = loader.load()
-
 persist_directory = 'db'
 
 
 @app.get("/")
-async def read_root(request: Request):
-    return 'welcome to the llm-chat-gpt-demo'
+async def welcome(request: Request):
+    """Welcome endpoint."""
+    return 'Welcome to the LLM-GPT Demo'
 
 
 @app.post("/")
-async def read_root(request: Request):
-    body = await request.json()
-    query = body['user_input']
+async def generate_response(request: Request):
+    """Endpoint to run the model and generate a response."""
+    request_data = await request.json()
+    user_input = request_data['user_input']
 
     text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
-    texts = text_splitter.split_documents(documents)
+    split_texts = text_splitter.split_documents(documents)
 
     embeddings = OpenAIEmbeddings()
+    vector_db = Chroma.from_documents(documents=split_texts, embeddings=embeddings, persist_directory=persist_directory)
 
-    vector_db = Chroma.from_documents(documents=texts, embeddings=embeddings, persist_directory=persist_directory)
+    chat_model = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0.2)
+    qa = RetrievalQA.from_chain_type(llm=chat_model, chain_type="stuff", retriever=vector_db.as_retriever())
 
-    llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0.2)
+    bot_response = qa.run(user_input)
+    unique_id = str(uuid.uuid4())
+    created_time = int(time.time())
 
-    qa = RetrievalQA.from_chain_type(llm=llm, chain_type="stuff", retriever=vector_db.as_retriever())
+    response_data = {
+        "id": "chatres-" + unique_id,
+        "created": created_time,
+        "model": "llm-gpt-demo-v1",
+        "content": bot_response
+    }
 
-    return qa.run(query)
+    return JSONResponse(content=response_data)

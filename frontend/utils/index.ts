@@ -32,7 +32,11 @@ export const OpenAIStream = async (messages: Message[]) => {
 
   const stream = new ReadableStream({
     async start(controller) {
+      // @ts-ignore
+      const reader = res.body.getReader();
+
       const onParse = (event: ParsedEvent | ReconnectInterval) => {
+        // console.log(event);
         if (event.type === "event") {
           const data = event.data;
 
@@ -43,6 +47,7 @@ export const OpenAIStream = async (messages: Message[]) => {
 
           try {
             const json = JSON.parse(data);
+            console.log(json); // <-- Log the parsed JSON data here
             const text = json.choices[0].delta.content;
             const queue = encoder.encode(text);
             controller.enqueue(queue);
@@ -54,10 +59,18 @@ export const OpenAIStream = async (messages: Message[]) => {
 
       const parser = createParser(onParse);
 
-      for await (const chunk of res.body as any) {
-        parser.feed(decoder.decode(chunk));
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) {
+          parser.reset();
+          break;
+        }
+        const chunk = decoder.decode(value, { stream: true });
+        // console.log(chunk);
+        parser.feed(chunk);
+        // console.log("Chunk received:", chunk);
       }
-    }
+    },
   });
 
   return stream;
