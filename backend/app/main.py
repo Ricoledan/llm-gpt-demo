@@ -1,6 +1,5 @@
 import os
 import sys
-import uuid
 import time
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request
@@ -34,7 +33,6 @@ async def welcome(request: Request):
 
 @app.post("/")
 async def generate_response(request: Request):
-    """Endpoint to run the model and generate a response."""
     request_data = await request.json()
     user_input = request_data['user_input']
 
@@ -48,11 +46,9 @@ async def generate_response(request: Request):
     qa = RetrievalQA.from_chain_type(llm=chat_model, chain_type="stuff", retriever=vector_db.as_retriever())
 
     bot_response = qa.run(user_input)
-    unique_id = str(uuid.uuid4())
     created_time = int(time.time())
 
     response_data = {
-        "id": "chatres-" + unique_id,
         "created": created_time,
         "model": "llm-gpt-demo-v1",
         "content": bot_response

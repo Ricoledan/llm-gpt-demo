@@ -1,4 +1,4 @@
-import { Message } from "@/types";
+import {Message} from "@/types";
 
 export const LocalAIStream = async (messages: Message[]) => {
   const res = await fetch("http://127.0.0.1:8000", {
@@ -16,9 +16,7 @@ export const LocalAIStream = async (messages: Message[]) => {
   }
 
   const json = await res.json();
-  console.log(json); // <-- Log the parsed JSON data here
+  console.log('bot_response: ',  json.content)
 
-  const text = json.content;
-
-  return text;
+  return json.content;
 };
